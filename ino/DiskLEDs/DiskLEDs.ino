@@ -88,14 +88,6 @@ int disk_flags[8] = {
     P_DISK7  // sdi
 };
 
-bool serial_synced = false;
-
-// waitbuf ms... keeps adding on to it
-int waitbuf_ms = 200, orig_waitbuf_ms = 200;
-
-// not buffering anything, just handling the next op.
-int next_op = 0;
-
 /*
  * Arduino Basics
  */
@@ -199,16 +191,6 @@ void on (int flags) {
         
         delay(ms);
         all_off(NULL);
-    }
-}
-
-void all_on(int flags) {
-    set_color(flags);
-    
-    for (int i = 0; i < 8; i++) {
-        pinMode(disks[i], OUTPUT);
-        digitalWrite(disks[i], HIGH);
-        digitalWrite(disks[i], LOW);
     }
 }
 

@@ -18,5 +18,5 @@ Code:
 
  ### Instructions
  
- I donno, you figure it out, aren't you supposed to be a maker or something like that?
+ I donno, you figure it out, aren't you supposed to be a maker or something like that?  I will help you build one for $700.  Plus one year free support.
  
