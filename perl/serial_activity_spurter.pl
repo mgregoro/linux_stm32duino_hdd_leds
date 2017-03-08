@@ -38,13 +38,18 @@ use constant P_RED       => 256;     # all the disks in the mask should be on an
 use constant P_BLUE      => 512;     # all the disks in the mask should be on and blue
 use constant P_GREEN     => 1024;    # tall the disks in the mask should be on green
 use constant P_OFF       => 2048;    # turn off all the lights
-use constant P_D75MS     => 4096;    # stays in this state for 100ms (75 + 25)
-use constant P_D125MS    => 8192;    # stays in this state for 150ms (125 + 25)
-use constant P_D475MS    => 16384;   # stays in this state for 500ms (475 + 25)
+use constant P_D25MS     => 4096;    # stays lit for 25ms
+use constant P_D75MS     => 8192;    # stays lit for 75ms 
+use constant P_D225MS    => 16384;   # stays lit for 225ms
 use constant P_SYNCED    => 32768;   # if whatever we send isn't & this, it's a byte off.
 
 use constant P_READ      => P_GREEN;
 use constant P_WRITE     => P_RED;
+
+# configure this to your liking. P_D25MS =~ 33FPS which creates the illusion of the lights
+# blinking more than one color at a time / blinking on their own, but uses 1% of one core
+# on my Skylake i7 6700.  That's kind of a lot of CPU for blinking some freakin lights.
+use constant P_DEFAULT_DURATION => P_D25MS;
 
 use Mojo::File;
 use Device::SerialPort;
@@ -141,7 +146,7 @@ sub analyze_disk_activity {
     if ($total_reads > $total_writes) {
         my $delta = $total_reads - $total_writes;
         print "READS  - DELTA       $delta\n" if $ENV{DAP_DEBUG};
-        if ($delta > 100) {
+        if ($delta > 75) {
             $flags |= P_READ;
         } else {
             $flags |= P_GREEN | P_BLUE;
@@ -154,7 +159,7 @@ sub analyze_disk_activity {
     } elsif ($total_writes > $total_reads) {
         my $delta = $total_writes - $total_reads;
         print "WRITES - DELTA       $delta\n" if $ENV{DAP_DEBUG};
-        if ($delta > 100) {
+        if ($delta > 75) {
             $flags |= P_WRITE;
         } else {
             $flags |= P_RED | P_BLUE;
@@ -164,6 +169,13 @@ sub analyze_disk_activity {
                 $flags |= $disk_params[$i];
             }
         }
+    } elsif ($total_reads > 100 && ($total_reads == $total_writes)) {
+        # flash all lights white!
+        print "BOTH   - EQUAL\n" if $ENV{DAP_DEBUG};
+        $flags = P_RED | P_BLUE | P_GREEN;
+        for (my $i = 0; $i < scalar(@$out); $i++) {
+            $flags |= $disk_params[$i];
+        }
     } else {
         print "OFF    - NO ACTIVITY; $total_writes ... $total_reads]}\n" if $ENV{DAP_DEBUG};
         $flags |= P_OFF;
@@ -172,9 +184,9 @@ sub analyze_disk_activity {
         }
     }
 
-    $flags |= P_D75MS;
+    $flags |= P_DEFAULT_DURATION;
 
     printf("FLAGS: %016b\n", $flags) if $ENV{DAP_DEBUG};
 
-    return ($flags, 0.125);
+    return ($flags, 0.030);
 }

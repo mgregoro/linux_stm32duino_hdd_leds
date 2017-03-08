@@ -26,16 +26,24 @@
 // Sketch uses 18,380 bytes (14%) of program storage space. Maximum is 131,072 bytes.
 // Global variables use 3,952 bytes of dynamic memory
 
+/*
+ * Configuration
+ */
+
 // send debug info back across serial, you gotta watch for it...
 #define DEBUG false
 
 // are we gonna test or what?
 #define LIGHTTEST false
 
+/*
+ * End Configuration
+ */
+
 // the color pins are defined here
-#define RED PA0
-#define BLUE PA1
-#define GREEN PA2
+#define BLUE PA0
+#define GREEN PA1
+#define RED PA2
 
 // the LED pins are defined here
 #define DISK0 PB9
@@ -60,9 +68,9 @@
 #define P_BLUE 512      // all the disks in the mask should be on and blue
 #define P_GREEN 1024    // tall the disks in the mask should be on green
 #define P_OFF 2048      // turn off all the lights
-#define P_D75MS 4096    // stays in this state for 100ms (75 + 25)
-#define P_D125MS 8192   // stays in this state for 150ms (125 + 25)
-#define P_D475MS 16384  // stays in this state for 500ms (475 + 25)
+#define P_D25MS 4096    // stays lit for 25 ms, then OFF for OFFTIME
+#define P_D75MS 8192    // stays lit for 75 ms, then OFF for OFFTIME
+#define P_D225MS 16384  // stays lit for 225ms, then OFF for OFFTIME
 #define P_SYNCED 32768  // check if we're in sync
 
 // 8 disks, Read and Write LEDs, for easy access
@@ -169,15 +177,15 @@ void loop() {
 
 // turn on these disks
 void on (int flags) {
-    int ms = 25;
+    int ms;
+    if (flags & P_D25MS) {
+        ms += 25 ;
+    }
     if (flags & P_D75MS) {
         ms += 75;
     }
-    if (flags & P_D125MS) {
-        ms += 125;
-    }
-    if (flags & P_D475MS) {
-        ms += 475;
+    if (flags & P_D225MS) {
+        ms += 225;
     }
 
     if (flags == P_OFF) {
